@@ -1,0 +1,108 @@
+import { assertIsPost, success } from "@carbon/auth";
+import { requirePermissions } from "@carbon/auth/auth.server";
+import { flash } from "@carbon/auth/session.server";
+import { validator } from "@carbon/form";
+import { useRouteData } from "@carbon/remix";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import { redirect, useLoaderData, useNavigate, useParams } from "react-router";
+import type { ConsumableSummary } from "~/modules/items";
+import { supplierPartValidator, upsertSupplierPart } from "~/modules/items";
+import { SupplierPartForm } from "~/modules/items/ui/Item";
+import { setCustomFields } from "~/utils/form";
+import { path } from "~/utils/path";
+
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const { client, companyId } = await requirePermissions(request, {
+    view: "parts",
+    role: "employee"
+  });
+
+  const { supplierPartId } = params;
+  if (!supplierPartId) throw new Error("Could not find supplierPartId");
+
+  const supplierPart = await client
+    .from("supplierPart")
+    .select("*")
+    .eq("id", supplierPartId)
+    .eq("companyId", companyId)
+    .single();
+
+  if (!supplierPart?.data) throw new Error("Could not find supplier part");
+
+  return { supplierPart: supplierPart.data };
+}
+
+export async function action({ request, params }: ActionFunctionArgs) {
+  assertIsPost(request);
+  const { client, userId } = await requirePermissions(request, {
+    update: "parts",
+    role: "employee"
+  });
+
+  const { itemId, supplierPartId } = params;
+  if (!itemId) throw new Error("Could not find itemId");
+  if (!supplierPartId) throw new Error("Could not find supplierPartId");
+
+  const formData = await request.formData();
+  const validation = await validator(supplierPartValidator).validate(formData);
+
+  if (validation.error) {
+    return { success: false, message: "Invalid form data" };
+  }
+
+  // biome-ignore lint/correctness/noUnusedVariables: suppressed due to migration
+  const { id, ...d } = validation.data;
+
+  const updatedSupplierPart = await upsertSupplierPart(client, {
+    id: supplierPartId,
+    ...d,
+    updatedBy: userId,
+    customFields: setCustomFields(formData)
+  });
+
+  if (updatedSupplierPart.error) {
+    return { success: false, message: "Failed to update supplier part" };
+  }
+
+  throw redirect(
+    path.to.consumablePurchasing(itemId),
+    await flash(request, success("Supplier part updated"))
+  );
+}
+
+export default function EditConsumableSupplierRoute() {
+  const { itemId } = useParams();
+  const { supplierPart } = useLoaderData<typeof loader>();
+
+  if (!itemId) throw new Error("itemId not found");
+
+  const routeData = useRouteData<{ consumableSummary: ConsumableSummary }>(
+    path.to.consumable(itemId)
+  );
+
+  const navigate = useNavigate();
+  const onClose = () => navigate(path.to.consumablePurchasing(itemId));
+
+  const initialValues = {
+    id: supplierPart.id,
+    itemId: supplierPart.itemId,
+    supplierId: supplierPart.supplierId,
+    supplierPartId: supplierPart.supplierPartId ?? "",
+    unitPrice: supplierPart.unitPrice ?? 0,
+    supplierUnitOfMeasureCode: supplierPart.supplierUnitOfMeasureCode ?? "EA",
+    minimumOrderQuantity: supplierPart.minimumOrderQuantity ?? 1,
+    conversionFactor: supplierPart.conversionFactor ?? 1,
+    lastPurchaseDate: supplierPart.lastPurchaseDate,
+    lastPOQuantity: supplierPart.lastPOQuantity,
+    lastPOId: supplierPart.lastPOId
+  };
+
+  return (
+    <SupplierPartForm
+      type="Consumable"
+      initialValues={initialValues}
+      unitOfMeasureCode={routeData?.consumableSummary?.unitOfMeasureCode ?? ""}
+      onClose={onClose}
+    />
+  );
+}

@@ -1,3 +1,4 @@
+import { useCarbon } from "@carbon/auth";
 import { ValidatedForm } from "@carbon/form";
 import {
   Button,
@@ -25,12 +26,15 @@ import {
   Supplier,
   UnitOfMeasure
 } from "~/components/Form";
-import { usePermissions, useUser } from "~/hooks";
+import { useCurrencyFormatter, usePermissions, useUser } from "~/hooks";
 import { path } from "~/utils/path";
 import { supplierPartValidator } from "../../items.models";
 
 type SupplierPartFormProps = {
-  initialValues: z.infer<typeof supplierPartValidator>;
+  initialValues: z.infer<typeof supplierPartValidator> & {
+    lastPurchaseDate?: string | null;
+    lastPOQuantity?: number | null;
+  };
   type: "Part" | "Service" | "Tool" | "Consumable" | "Material";
   unitOfMeasureCode: string;
   onClose: () => void;
@@ -42,7 +46,9 @@ const SupplierPartForm = ({
   unitOfMeasureCode,
   onClose
 }: SupplierPartFormProps) => {
+  const { carbon } = useCarbon();
   const permissions = usePermissions();
+  const formatter = useCurrencyFormatter();
 
   const { company } = useUser();
   const baseCurrency = company?.baseCurrencyCode ?? "USD";
@@ -64,6 +70,29 @@ const SupplierPartForm = ({
 
   const action = getAction(isEditing, type, itemId, initialValues.id);
   const fetcher = useFetcher<{ success: boolean; message: string }>();
+
+  // Fetch price breaks for existing supplier parts
+  const [priceBreaks, setPriceBreaks] = useState<
+    {
+      quantity: number;
+      unitPrice: number;
+      leadTime: number | null;
+      sourceType: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    if (!carbon || !isEditing || !initialValues.id) return;
+
+    carbon
+      .from("supplierPartPrice")
+      .select("quantity, unitPrice, leadTime, sourceType")
+      .eq("supplierPartId", initialValues.id)
+      .order("quantity", { ascending: true })
+      .then(({ data }) => {
+        if (data?.length) setPriceBreaks(data);
+      });
+  }, [carbon, isEditing, initialValues.id]);
 
   useEffect(() => {
     if (fetcher.data?.success) {
@@ -110,6 +139,64 @@ const SupplierPartForm = ({
                   currency: baseCurrency
                 }}
               />
+              {/* Show last purchase info if available (read-only) */}
+              {initialValues.lastPurchaseDate && (
+                <div className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3 space-y-1">
+                  <div className="font-medium text-foreground">
+                    Last Purchase Info
+                  </div>
+                  <div>
+                    Date:{" "}
+                    {new Date(
+                      initialValues.lastPurchaseDate
+                    ).toLocaleDateString()}
+                  </div>
+                  {initialValues.lastPOQuantity != null && (
+                    <div>
+                      Quantity: {initialValues.lastPOQuantity.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Show quantity price breaks if available */}
+              {priceBreaks.length > 0 && (
+                <div className="text-sm bg-muted/50 rounded-md p-3 space-y-2">
+                  <div className="font-medium text-foreground">
+                    Price Breaks
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-muted-foreground border-b">
+                        <th className="text-left py-1">Qty</th>
+                        <th className="text-right py-1">Unit Price</th>
+                        <th className="text-right py-1">Lead Time</th>
+                        <th className="text-right py-1">Source</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {priceBreaks.map((pb) => (
+                        <tr
+                          key={pb.quantity}
+                          className="border-b last:border-0"
+                        >
+                          <td className="py-1">
+                            {pb.quantity.toLocaleString()}
+                          </td>
+                          <td className="text-right py-1">
+                            {formatter.format(pb.unitPrice)}
+                          </td>
+                          <td className="text-right py-1">
+                            {pb.leadTime != null ? `${pb.leadTime}d` : "—"}
+                          </td>
+                          <td className="text-right py-1 text-muted-foreground">
+                            {pb.sourceType}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <UnitOfMeasure
                 name="supplierUnitOfMeasureCode"
                 label="Unit of Measure"

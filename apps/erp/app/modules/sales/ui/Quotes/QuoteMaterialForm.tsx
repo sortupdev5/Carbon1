@@ -12,7 +12,7 @@ import {
   VStack
 } from "@carbon/react";
 import { getItemReadableId } from "@carbon/utils";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFetcher, useLocation, useNavigate, useParams } from "react-router";
 import type { z } from "zod";
 import {
@@ -20,8 +20,6 @@ import {
   Hidden,
   InputControlled,
   Item,
-  // biome-ignore lint/suspicious/noShadowRestrictedNames: suppressed due to migration
-  Number,
   NumberControlled,
   Select,
   Submit,
@@ -88,6 +86,50 @@ const QuoteMaterialForm = ({
     });
   };
 
+  // Lookup the best (lowest) price for a Buy item at a given quantity
+  // from supplierPartPrice across all vendors (SAP behavior)
+  const lookupBuyPrice = useCallback(
+    async (itemId: string, qty: number, fallbackCost: number) => {
+      if (!carbon) return fallbackCost;
+
+      const supplierParts = await carbon
+        .from("supplierPart")
+        .select("id, unitPrice")
+        .eq("itemId", itemId);
+
+      if (!supplierParts.data?.length) return fallbackCost;
+
+      const supplierPartIds = supplierParts.data.map((sp) => sp.id);
+
+      // Find the lowest price across all vendors for applicable qty tiers
+      // (SAP behavior: lowest valid PIR price wins)
+      const priceBreak = await carbon
+        .from("supplierPartPrice")
+        .select("unitPrice")
+        .in("supplierPartId", supplierPartIds)
+        .lte("quantity", qty)
+        .order("unitPrice", { ascending: true })
+        .limit(1)
+        .single();
+
+      if (priceBreak.data?.unitPrice != null) {
+        return priceBreak.data.unitPrice;
+      }
+
+      // Fall back to supplierPart.unitPrice (lowest across vendors)
+      const lowestSupplierPrice = supplierParts.data
+        .filter((sp) => sp.unitPrice != null)
+        .sort((a, b) => (a.unitPrice ?? 0) - (b.unitPrice ?? 0))[0];
+
+      if (lowestSupplierPrice?.unitPrice != null) {
+        return lowestSupplierPrice.unitPrice;
+      }
+
+      return fallbackCost;
+    },
+    [carbon]
+  );
+
   const onItemChange = async (itemId: string) => {
     if (!carbon) return;
 
@@ -107,15 +149,48 @@ const QuoteMaterialForm = ({
       return;
     }
 
+    let unitCost = itemCost.data?.unitCost ?? 0;
+    const isBuyPart = item.data?.defaultMethodType === "Buy";
+
+    if (isBuyPart) {
+      unitCost = await lookupBuyPrice(itemId, itemData.quantity ?? 1, unitCost);
+    }
+
     setItemData((d) => ({
       ...d,
       itemId,
       description: item.data?.name ?? "",
-      unitCost: itemCost.data?.unitCost ?? 0,
+      unitCost,
       unitOfMeasureCode: item.data?.unitOfMeasureCode ?? "EA",
       methodType: item.data?.defaultMethodType ?? "Buy"
     }));
   };
+
+  // Re-lookup price when quantity changes for Buy parts
+  const onQuantityChange = useCallback(
+    async (newQty: number) => {
+      setItemData((d) => ({ ...d, quantity: newQty }));
+
+      if (itemData.methodType !== "Buy" || !itemData.itemId) return;
+      if (!carbon) return;
+
+      const itemCost = await carbon
+        .from("itemCost")
+        .select("unitCost")
+        .eq("itemId", itemData.itemId)
+        .single();
+
+      const fallbackCost = itemCost.data?.unitCost ?? 0;
+      const unitCost = await lookupBuyPrice(
+        itemData.itemId,
+        newQty,
+        fallbackCost
+      );
+
+      setItemData((d) => ({ ...d, unitCost }));
+    },
+    [carbon, itemData.methodType, itemData.itemId, lookupBuyPrice]
+  );
 
   const [, setSearchParams] = useUrlParams();
 
@@ -202,7 +277,12 @@ const QuoteMaterialForm = ({
                 value={itemData.methodType}
                 replenishmentSystem="Buy and Make"
               />
-              <Number name="quantity" label="Quantity per Parent" />
+              <NumberControlled
+                name="quantity"
+                label="Quantity per Parent"
+                value={itemData.quantity}
+                onChange={onQuantityChange}
+              />
               <UnitOfMeasure
                 name="unitOfMeasureCode"
                 value={itemData.unitOfMeasureCode}

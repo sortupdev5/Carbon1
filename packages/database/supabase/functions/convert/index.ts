@@ -1502,6 +1502,20 @@ serve(async (req: Request) => {
             )
             .forEach((line) => {
               const key = `${line.itemId}-${quote.data.supplierId}`;
+              const selectedLine = selectedLines![line.id!];
+              // Calculate unit price in inventory unit (company currency)
+              // exchangeRate = supplier currency per 1 company currency (e.g., 130 JPY/USD)
+              // So: company price = supplierUnitPrice / exchangeRate
+              // Then divide by conversionFactor to get inventory unit price
+              const exchangeRate = quote.data.exchangeRate ?? 1;
+              const unitPriceInInventoryUnit =
+                (selectedLine.supplierUnitPrice /
+                  (exchangeRate === 0 ? 1 : exchangeRate)) /
+                (line.conversionFactor ?? 1);
+              // Calculate quantity in inventory units
+              const quantityInInventoryUnits =
+                selectedLine.quantity * (line.conversionFactor ?? 1);
+
               supplierPartMap.set(key, {
                 companyId,
                 supplierId: quote.data?.supplierId!,
@@ -1510,6 +1524,11 @@ serve(async (req: Request) => {
                 conversionFactor: line.conversionFactor,
                 itemId: line.itemId!,
                 createdBy: userId,
+                // New pricing fields
+                unitPrice: unitPriceInInventoryUnit,
+                lastPurchaseDate: new Date().toISOString(),
+                lastPOQuantity: quantityInInventoryUnits,
+                lastPOId: insertedPurchaseOrderId,
               });
             });
 
@@ -1526,9 +1545,99 @@ serve(async (req: Request) => {
                   .columns(["itemId", "supplierId", "companyId"])
                   .doUpdateSet((eb) => ({
                     supplierPartId: eb.ref("excluded.supplierPartId"),
+                    // Update pricing fields on conflict
+                    unitPrice: eb.ref("excluded.unitPrice"),
+                    lastPurchaseDate: eb.ref("excluded.lastPurchaseDate"),
+                    lastPOQuantity: eb.ref("excluded.lastPOQuantity"),
+                    lastPOId: eb.ref("excluded.lastPOId"),
                   }))
               )
               .execute();
+
+            // Also upsert into supplierPartPrice with sourceType='PurchaseOrder'
+            // This confirms the price tier for the specific quantity ordered
+            const supplierParts = await trx
+              .selectFrom("supplierPart")
+              .select(["id", "itemId"])
+              .where("supplierId", "=", quote.data.supplierId)
+              .where("companyId", "=", companyId)
+              .where(
+                "itemId",
+                "in",
+                supplierPartToItemInserts.map((i: { itemId: string }) => i.itemId)
+              )
+              .execute();
+
+            const supplierPartIdByItemId = new Map(
+              supplierParts.map((sp) => [sp.itemId, sp.id])
+            );
+
+            for (const line of quoteLines.data.filter(
+              (l) =>
+                !!l.itemId &&
+                l.id &&
+                selectedLines &&
+                l.id in selectedLines
+            )) {
+              const spId = supplierPartIdByItemId.get(line.itemId);
+              if (!spId) continue;
+
+              const selectedLine = selectedLines![line.id!];
+              const exchangeRate = quote.data.exchangeRate ?? 1;
+              const conversionFactor = line.conversionFactor ?? 1;
+              // exchangeRate = supplier currency per 1 company currency
+              // Divide to convert to company currency, then divide by conversionFactor
+              const unitPriceInInventoryUnit =
+                (selectedLine.supplierUnitPrice /
+                  (exchangeRate === 0 ? 1 : exchangeRate)) /
+                conversionFactor;
+
+              await trx
+                .insertInto("supplierPartPrice")
+                .values({
+                  supplierPartId: spId,
+                  quantity: selectedLine.quantity,
+                  unitPrice: unitPriceInInventoryUnit,
+                  leadTime: selectedLine.leadTime ?? 0,
+                  sourceType: "PurchaseOrder",
+                  sourceDocumentId: insertedPurchaseOrderId,
+                  companyId,
+                  createdBy: userId,
+                  updatedBy: userId,
+                  updatedAt: new Date().toISOString(),
+                })
+                .onConflict((oc) =>
+                  oc
+                    .columns(["supplierPartId", "quantity"])
+                    .doUpdateSet((eb) => ({
+                      unitPrice: eb.ref("excluded.unitPrice"),
+                      leadTime: eb.ref("excluded.leadTime"),
+                      sourceType: eb.ref("excluded.sourceType"),
+                      sourceDocumentId: eb.ref("excluded.sourceDocumentId"),
+                      updatedBy: eb.ref("excluded.updatedBy"),
+                      updatedAt: eb.ref("excluded.updatedAt"),
+                    }))
+                )
+                .execute();
+            }
+
+            // Update each supplierPart.unitPrice with the best (lowest) price
+            // across all tiers (quotes + POs + manual)
+            for (const [, spId] of supplierPartIdByItemId) {
+              const result = await trx
+                .selectFrom("supplierPartPrice")
+                .select((eb) => eb.fn.min("unitPrice").as("minPrice"))
+                .where("supplierPartId", "=", spId)
+                .executeTakeFirst();
+
+              if (result?.minPrice != null) {
+                await trx
+                  .updateTable("supplierPart")
+                  .set({ unitPrice: Number(result.minPrice) })
+                  .where("id", "=", spId)
+                  .execute();
+              }
+            }
           }
         });
 

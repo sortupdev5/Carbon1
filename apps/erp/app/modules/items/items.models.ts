@@ -520,7 +520,10 @@ export const supplierPartValidator = z.object({
   supplierUnitOfMeasureCode: zfd.text(z.string().optional()),
   minimumOrderQuantity: zfd.numeric(z.number().min(0)),
   conversionFactor: zfd.numeric(z.number().min(0)),
-  unitPrice: zfd.numeric(z.number().min(0))
+  unitPrice: zfd.numeric(z.number().min(0).optional()),
+  lastPurchaseDate: z.string().optional(),
+  lastPOQuantity: zfd.numeric(z.number().min(0).optional()),
+  lastPOId: z.string().optional()
 });
 
 export const toolValidator = itemValidator.merge(

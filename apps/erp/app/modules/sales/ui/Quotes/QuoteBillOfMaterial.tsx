@@ -52,8 +52,6 @@ import {
   Hidden,
   InputControlled,
   Item,
-  // biome-ignore lint/suspicious/noShadowRestrictedNames: suppressed due to migration
-  Number,
   NumberControlled,
   Select,
   Shelf,
@@ -688,6 +686,50 @@ function MaterialForm({
     });
   };
 
+  // Lookup the best (lowest) price for a Buy item at a given quantity
+  // from supplierPartPrice across all vendors (SAP behavior)
+  const lookupBuyPrice = useCallback(
+    async (itemId: string, qty: number, fallbackCost: number) => {
+      if (!carbon) return fallbackCost;
+
+      const supplierParts = await carbon
+        .from("supplierPart")
+        .select("id, unitPrice")
+        .eq("itemId", itemId);
+
+      if (!supplierParts.data?.length) return fallbackCost;
+
+      const supplierPartIds = supplierParts.data.map((sp) => sp.id);
+
+      // Find the lowest price across all vendors for applicable qty tiers
+      // (SAP behavior: lowest valid PIR price wins)
+      const priceBreak = await carbon
+        .from("supplierPartPrice")
+        .select("unitPrice")
+        .in("supplierPartId", supplierPartIds)
+        .lte("quantity", qty)
+        .order("unitPrice", { ascending: true })
+        .limit(1)
+        .single();
+
+      if (priceBreak.data?.unitPrice != null) {
+        return priceBreak.data.unitPrice;
+      }
+
+      // Fall back to supplierPart.unitPrice (lowest across vendors)
+      const lowestSupplierPrice = supplierParts.data
+        .filter((sp) => sp.unitPrice != null)
+        .sort((a, b) => (a.unitPrice ?? 0) - (b.unitPrice ?? 0))[0];
+
+      if (lowestSupplierPrice?.unitPrice != null) {
+        return lowestSupplierPrice.unitPrice;
+      }
+
+      return fallbackCost;
+    },
+    [carbon]
+  );
+
   const onItemChange = async (itemId: string) => {
     if (!carbon) return;
     if (itemId === params.itemId) {
@@ -712,11 +754,18 @@ function MaterialForm({
       return;
     }
 
+    let unitCost = itemCost.data?.unitCost ?? 0;
+    const isBuyPart = item.data?.defaultMethodType === "Buy";
+
+    if (isBuyPart) {
+      unitCost = await lookupBuyPrice(itemId, itemData.quantity ?? 1, unitCost);
+    }
+
     setItemData((d) => ({
       ...d,
       itemId,
       description: item.data?.name ?? "",
-      unitCost: itemCost.data?.unitCost ?? 0,
+      unitCost,
       unitOfMeasureCode: item.data?.unitOfMeasureCode ?? "EA",
       methodType: item.data?.defaultMethodType ?? "Buy",
       requiresBatchTracking: item.data?.itemTrackingType === "Batch",
@@ -727,6 +776,32 @@ function MaterialForm({
       setItemType(item.data.type as MethodItemType);
     }
   };
+
+  // Re-lookup price when quantity changes for Buy parts
+  const onQuantityChange = useCallback(
+    async (newQty: number) => {
+      setItemData((d) => ({ ...d, quantity: newQty }));
+
+      if (itemData.methodType !== "Buy" || !itemData.itemId) return;
+      if (!carbon) return;
+
+      const itemCost = await carbon
+        .from("itemCost")
+        .select("unitCost")
+        .eq("itemId", itemData.itemId)
+        .single();
+
+      const fallbackCost = itemCost.data?.unitCost ?? 0;
+      const unitCost = await lookupBuyPrice(
+        itemData.itemId,
+        newQty,
+        fallbackCost
+      );
+
+      setItemData((d) => ({ ...d, unitCost }));
+    },
+    [carbon, itemData.methodType, itemData.itemId, lookupBuyPrice]
+  );
 
   const sourceDisclosure = useDisclosure();
   const backflushDisclosure = useDisclosure();
@@ -756,7 +831,6 @@ function MaterialForm({
           <Hidden name="unitCost" value={itemData.unitCost} />
         )}
       </div>
-
       <div className="grid w-full gap-x-8 gap-y-4 grid-cols-1 lg:grid-cols-3">
         <Item
           blacklist={[params.itemId!]}
@@ -772,7 +846,12 @@ function MaterialForm({
           onTypeChange={onTypeChange}
         />
 
-        <Number name="quantity" label="Quantity" />
+        <NumberControlled
+          name="quantity"
+          label="Quantity"
+          value={itemData.quantity}
+          onChange={onQuantityChange}
+        />
         <UnitOfMeasure
           name="unitOfMeasureCode"
           value={itemData.unitOfMeasureCode}
@@ -805,7 +884,6 @@ function MaterialForm({
           />
         )}
       </div>
-
       <div className="border border-border rounded-md shadow-sm p-4 flex flex-col gap-4 w-full">
         <HStack
           className="w-full justify-between cursor-pointer"
@@ -880,7 +958,6 @@ function MaterialForm({
           />
         </div>
       </div>
-
       <div className="border border-border rounded-md shadow-sm p-4 flex flex-col gap-4 w-full">
         <HStack
           className="w-full justify-between cursor-pointer"
@@ -942,7 +1019,6 @@ function MaterialForm({
           />
         </div>
       </div>
-
       <motion.div
         className="flex flex-1 items-center justify-end w-full pt-2"
         initial={{ opacity: 0, filter: "blur(4px)" }}

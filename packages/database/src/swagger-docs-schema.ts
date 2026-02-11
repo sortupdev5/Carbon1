@@ -10702,6 +10702,15 @@ export default {
             $ref: "#/parameters/rowFilter.supplierPart.tags",
           },
           {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPurchaseDate",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPOQuantity",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPOId",
+          },
+          {
             $ref: "#/parameters/select",
           },
           {
@@ -10809,6 +10818,15 @@ export default {
             $ref: "#/parameters/rowFilter.supplierPart.tags",
           },
           {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPurchaseDate",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPOQuantity",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPOId",
+          },
+          {
             $ref: "#/parameters/preferReturn",
           },
         ],
@@ -10868,6 +10886,15 @@ export default {
           },
           {
             $ref: "#/parameters/rowFilter.supplierPart.tags",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPurchaseDate",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPOQuantity",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPart.lastPOId",
           },
           {
             $ref: "#/parameters/body.supplierPart",
@@ -22579,6 +22606,195 @@ export default {
           },
         },
         tags: ["job"],
+      },
+    },
+    "/supplierPartPrice": {
+      get: {
+        parameters: [
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.supplierPartId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.quantity",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.unitPrice",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.leadTime",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.sourceType",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.sourceDocumentId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.companyId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.createdBy",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.createdAt",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.updatedBy",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.updatedAt",
+          },
+          {
+            $ref: "#/parameters/select",
+          },
+          {
+            $ref: "#/parameters/order",
+          },
+          {
+            $ref: "#/parameters/range",
+          },
+          {
+            $ref: "#/parameters/rangeUnit",
+          },
+          {
+            $ref: "#/parameters/offset",
+          },
+          {
+            $ref: "#/parameters/limit",
+          },
+          {
+            $ref: "#/parameters/preferCount",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            schema: {
+              items: {
+                $ref: "#/definitions/supplierPartPrice",
+              },
+              type: "array",
+            },
+          },
+          "206": {
+            description: "Partial Content",
+          },
+        },
+        tags: ["supplierPartPrice"],
+      },
+      post: {
+        parameters: [
+          {
+            $ref: "#/parameters/body.supplierPartPrice",
+          },
+          {
+            $ref: "#/parameters/select",
+          },
+          {
+            $ref: "#/parameters/preferPost",
+          },
+        ],
+        responses: {
+          "201": {
+            description: "Created",
+          },
+        },
+        tags: ["supplierPartPrice"],
+      },
+      delete: {
+        parameters: [
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.supplierPartId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.quantity",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.unitPrice",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.leadTime",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.sourceType",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.sourceDocumentId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.companyId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.createdBy",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.createdAt",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.updatedBy",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.updatedAt",
+          },
+          {
+            $ref: "#/parameters/preferReturn",
+          },
+        ],
+        responses: {
+          "204": {
+            description: "No Content",
+          },
+        },
+        tags: ["supplierPartPrice"],
+      },
+      patch: {
+        parameters: [
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.supplierPartId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.quantity",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.unitPrice",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.leadTime",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.sourceType",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.sourceDocumentId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.companyId",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.createdBy",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.createdAt",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.updatedBy",
+          },
+          {
+            $ref: "#/parameters/rowFilter.supplierPartPrice.updatedAt",
+          },
+          {
+            $ref: "#/parameters/body.supplierPartPrice",
+          },
+          {
+            $ref: "#/parameters/preferReturn",
+          },
+        ],
+        responses: {
+          "204": {
+            description: "No Content",
+          },
+        },
+        tags: ["supplierPartPrice"],
       },
     },
     "/contact": {
@@ -71896,6 +72112,20 @@ export default {
           },
           type: "array",
         },
+        lastPurchaseDate: {
+          format: "timestamp with time zone",
+          type: "string",
+        },
+        lastPOQuantity: {
+          format: "numeric",
+          type: "number",
+        },
+        lastPOId: {
+          description:
+            "Note:\nThis is a Foreign Key to `purchaseOrder.id`.<fk table='purchaseOrder' column='id'/>",
+          format: "text",
+          type: "string",
+        },
       },
       type: "object",
     },
@@ -77291,6 +77521,76 @@ export default {
           default: 1,
           format: "double precision",
           type: "number",
+        },
+      },
+      type: "object",
+    },
+    supplierPartPrice: {
+      required: [
+        "supplierPartId",
+        "quantity",
+        "unitPrice",
+        "sourceType",
+        "companyId",
+        "createdBy",
+        "createdAt",
+      ],
+      properties: {
+        supplierPartId: {
+          description: "Note:\nThis is a Primary Key.<pk/>",
+          format: "text",
+          type: "string",
+        },
+        quantity: {
+          default: 1,
+          description: "Note:\nThis is a Primary Key.<pk/>",
+          format: "numeric",
+          type: "number",
+        },
+        unitPrice: {
+          format: "numeric",
+          type: "number",
+        },
+        leadTime: {
+          default: 0,
+          format: "numeric",
+          type: "number",
+        },
+        sourceType: {
+          default: "Quote",
+          format: "text",
+          type: "string",
+        },
+        sourceDocumentId: {
+          format: "text",
+          type: "string",
+        },
+        companyId: {
+          description:
+            "Note:\nThis is a Foreign Key to `company.id`.<fk table='company' column='id'/>",
+          format: "text",
+          type: "string",
+        },
+        createdBy: {
+          description:
+            "Note:\nThis is a Foreign Key to `user.id`.<fk table='user' column='id'/>",
+          format: "text",
+          type: "string",
+        },
+        createdAt: {
+          default: "now()",
+          format: "timestamp with time zone",
+          type: "string",
+        },
+        updatedBy: {
+          description:
+            "Note:\nThis is a Foreign Key to `user.id`.<fk table='user' column='id'/>",
+          format: "text",
+          type: "string",
+        },
+        updatedAt: {
+          format: "timestamp with time zone",
+          type: "string",
         },
       },
       type: "object",
@@ -102356,6 +102656,24 @@ export default {
       in: "query",
       type: "string",
     },
+    "rowFilter.supplierPart.lastPurchaseDate": {
+      name: "lastPurchaseDate",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPart.lastPOQuantity": {
+      name: "lastPOQuantity",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPart.lastPOId": {
+      name: "lastPOId",
+      required: false,
+      in: "query",
+      type: "string",
+    },
     "body.partner": {
       name: "partner",
       description: "partner",
@@ -108369,6 +108687,81 @@ export default {
     },
     "rowFilter.job.priority": {
       name: "priority",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "body.supplierPartPrice": {
+      name: "supplierPartPrice",
+      description: "supplierPartPrice",
+      required: false,
+      in: "body",
+      schema: {
+        $ref: "#/definitions/supplierPartPrice",
+      },
+    },
+    "rowFilter.supplierPartPrice.supplierPartId": {
+      name: "supplierPartId",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.quantity": {
+      name: "quantity",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.unitPrice": {
+      name: "unitPrice",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.leadTime": {
+      name: "leadTime",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.sourceType": {
+      name: "sourceType",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.sourceDocumentId": {
+      name: "sourceDocumentId",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.companyId": {
+      name: "companyId",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.createdBy": {
+      name: "createdBy",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.createdAt": {
+      name: "createdAt",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.updatedBy": {
+      name: "updatedBy",
+      required: false,
+      in: "query",
+      type: "string",
+    },
+    "rowFilter.supplierPartPrice.updatedAt": {
+      name: "updatedAt",
       required: false,
       in: "query",
       type: "string",
