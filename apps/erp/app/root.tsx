@@ -31,7 +31,8 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData
+  useLoaderData,
+  useRouteLoaderData
 } from "react-router";
 import { getMode, setMode } from "~/services/mode.server";
 import Background from "~/styles/background.css?url";
@@ -137,12 +138,14 @@ export function Document({
   children,
   title = "Carbon",
   mode = "light",
-  theme = "zinc"
+  theme = "zinc",
+  env
 }: {
   children: React.ReactNode;
   title?: string;
   mode?: "light" | "dark";
   theme?: string;
+  env?: Record<string, any>;
 }) {
   const selectedTheme = themes.find((t) => t.name === theme) as
     | Theme
@@ -193,6 +196,11 @@ export function Document({
         {children}
         <Toaster position="bottom-right" visibleToasts={5} />
         <ScrollRestoration />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.env = ${JSON.stringify(env ?? {})};`
+          }}
+        />
         <Scripts />
         {!CONTROLLED_ENVIRONMENT && <Analytics />}
       </body>
@@ -234,13 +242,8 @@ export default function App() {
   return (
     <OperatingSystemContextProvider platform={prefs.platform}>
       <I18nProvider locale={prefs.locale}>
-        <Document mode={mode} theme={theme}>
+        <Document mode={mode} theme={theme} env={env}>
           <Outlet />
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `window.env = ${JSON.stringify(env)};`
-            }}
-          />
         </Document>
       </I18nProvider>
     </OperatingSystemContextProvider>
@@ -248,6 +251,7 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  const loaderData = useRouteLoaderData<typeof loader>("root");
   const message = isRouteErrorResponse(error)
     ? (error.data.message ?? error.data)
     : error instanceof Error
@@ -255,7 +259,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       : String(error);
 
   return (
-    <Document title="Error!">
+    <Document title="Error!" env={loaderData?.env}>
       <div className="light">
         <div className="flex flex-col w-full h-screen items-center justify-center space-y-4 ">
           <img
