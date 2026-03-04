@@ -1,6 +1,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { minimatch } from "minimatch";
+// @ts-ignore
+import minimatchModule from "minimatch";
+
+const minimatch = (
+  typeof minimatchModule === "function"
+    ? minimatchModule
+    : (minimatchModule as any).default
+) as typeof minimatchModule;
 
 interface RouteInfo {
   id: string;
