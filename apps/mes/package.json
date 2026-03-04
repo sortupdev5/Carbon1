@@ -2,7 +2,7 @@
   "name": "mes",
   "type": "module",
   "dependencies": {
-    "minimatch": "^3.1.2",
+    "minimatch": "^10.1.1",
     "@carbon/auth": "*",
     "@carbon/database": "*",
     "@carbon/documents": "*",

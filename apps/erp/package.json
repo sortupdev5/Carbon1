@@ -11,7 +11,7 @@
     "@ai-sdk/anthropic": "^2.0.41",
     "@ai-sdk/openai": "^2.0.60",
     "@ai-sdk/react": "^2.0.86",
-    "minimatch": "^3.1.2",
+    "minimatch": "^10.1.1",
     "@carbon/auth": "*",
     "@carbon/database": "*",
     "@carbon/documents": "*",
