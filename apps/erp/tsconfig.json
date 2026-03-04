@@ -18,7 +18,25 @@
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"],
+      "@carbon/auth": ["../../packages/auth/src/index.ts"],
+      "@carbon/auth/*": ["../../packages/auth/src/*"],
+      "@carbon/database": ["../../packages/database/src/index.ts"],
+      "@carbon/database/*": ["../../packages/database/src/*"],
+      "@carbon/documents/email": [
+        "../../packages/documents/src/email/index.ts"
+      ],
+      "@carbon/documents/pdf": ["../../packages/documents/src/pdf/index.ts"],
+      "@carbon/documents/zpl": ["../../packages/documents/src/zpl/index.ts"],
+      "@carbon/documents/qr": ["../../packages/documents/src/qr/qr-code.ts"],
+      "@carbon/form": ["../../packages/form/src/index.tsx"],
+      "@carbon/form/*": ["../../packages/form/src/*"],
+      "@carbon/react": ["../../packages/react/src/index.tsx"],
+      "@carbon/react/*": ["../../packages/react/src/*"],
+      "@carbon/remix": ["../../packages/remix/src/index.ts"],
+      "@carbon/remix/*": ["../../packages/remix/src/*"],
+      "@carbon/utils": ["../../packages/utils/src/index.ts"],
+      "@carbon/utils/*": ["../../packages/utils/src/*"]
     },
     "rootDirs": [".", ".react-router/types"],
     "noEmit": true,
