@@ -2,6 +2,8 @@
   "name": "mes",
   "type": "module",
   "dependencies": {
+    "@react-router/remix-routes-option-adapter": "^7.12.0",
+    "remix-flat-routes": "^0.8.5",
     "@carbon/auth": "*",
     "@carbon/database": "*",
     "@carbon/documents": "*",
