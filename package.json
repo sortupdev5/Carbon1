@@ -10,7 +10,6 @@
     "patch-package": "^8.0.1",
     "postcss-nesting": "12.1.5",
     "prettier": "^2.8.0",
-
     "rimraf": "^5.0.5",
     "supabase": "2.54.11",
     "ts-morph": "^22.0.0",
@@ -65,7 +64,7 @@
     "lint": "turbo run lint",
     "novu:sync": "npx novu@latest sync --bridge-url https://app.carbon.ms/api/novu --secret-key $NOVU_SECRET_KEY --api-url https://api.novu.co",
     "postdb:build": "run-s generate:types generate:swagger",
-    "postinstall": "patch-package",
+    "postinstall": "npx patch-package",
     "predb:build": "tsx scripts/setup-env-files.ts",
     "prepare": "npx husky install",
     "setup": "turbo run setup",
