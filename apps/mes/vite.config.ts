@@ -151,6 +151,9 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
       "@tanstack/query-core": path.resolve(__dirname, "../../node_modules/@tanstack/query-core"),
       "@marsidev/react-turnstile": path.resolve(__dirname, "../../node_modules/@marsidev/react-turnstile"),
       "posthog-js": path.resolve(__dirname, "../../node_modules/posthog-js"),
+      "react-csv": path.resolve(__dirname, "../../node_modules/react-csv"),
+      "json-2-csv": path.resolve(__dirname, "../../node_modules/json-2-csv"),
+      "papaparse": path.resolve(__dirname, "../../node_modules/papaparse"),
     },
   },
 }));
