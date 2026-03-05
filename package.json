@@ -64,7 +64,7 @@
     "lint": "turbo run lint",
     "novu:sync": "npx novu@latest sync --bridge-url https://app.carbon.ms/api/novu --secret-key $NOVU_SECRET_KEY --api-url https://api.novu.co",
     "postdb:build": "run-s generate:types generate:swagger",
-    "postinstall": "patch-package",
+    "postinstall": "patch-package || echo \"patch-package not available, skipping\"",
     "predb:build": "tsx scripts/setup-env-files.ts",
     "prepare": "npx husky install",
     "setup": "turbo run setup",
