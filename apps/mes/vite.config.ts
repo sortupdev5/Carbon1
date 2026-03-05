@@ -122,8 +122,6 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
       "@carbon/tiptap": path.resolve(__dirname, "../../packages/tiptap/src"),
       "@carbon/utils$": path.resolve(__dirname, "../../packages/utils/src/index.ts"),
       "@carbon/utils": path.resolve(__dirname, "../../packages/utils/src"),
-      "@marsidev/react-turnstile": path.resolve(__dirname, "../../node_modules/@marsidev/react-turnstile"),
-      "@tanstack/react-query": path.resolve(__dirname, "../../node_modules/@tanstack/react-query"),
     },
   },
 }));
