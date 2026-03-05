@@ -145,6 +145,12 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
       "@carbon/tiptap": path.resolve(__dirname, "../../packages/tiptap/src"),
       "@carbon/utils$": path.resolve(__dirname, "../../packages/utils/src/index.ts"),
       "@carbon/utils": path.resolve(__dirname, "../../packages/utils/src"),
+      "@tanstack/react-query": path.resolve(__dirname, "../../node_modules/@tanstack/react-query"),
+      "@tanstack/react-table": path.resolve(__dirname, "../../node_modules/@tanstack/react-table"),
+      "@tanstack/react-virtual": path.resolve(__dirname, "../../node_modules/@tanstack/react-virtual"),
+      "@tanstack/query-core": path.resolve(__dirname, "../../node_modules/@tanstack/query-core"),
+      "@marsidev/react-turnstile": path.resolve(__dirname, "../../node_modules/@marsidev/react-turnstile"),
+      "posthog-js": path.resolve(__dirname, "../../node_modules/posthog-js"),
     },
   },
 }));
