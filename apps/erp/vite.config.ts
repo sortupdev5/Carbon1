@@ -81,6 +81,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       "react-resizable-panels",
       "intl-parse-accept-language",
       "kysely",
+      "posthog-js",
     ],
   },
   server: {

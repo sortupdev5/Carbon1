@@ -69,6 +69,9 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
       "react-resizable-panels",
       "intl-parse-accept-language",
       "kysely",
+      "@marsidev/react-turnstile",
+      "react-csv",
+      "posthog-js",
     ],
   },
   server: {
