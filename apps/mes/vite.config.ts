@@ -63,7 +63,6 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
       "tiny-invariant",
       "unified",
       "unist-util-visit",
-      "lodash.template",
       "react-colorful",
       "react-confetti-explosion",
       "react-resizable-panels",
