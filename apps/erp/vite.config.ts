@@ -40,6 +40,7 @@ export default defineConfig(({ isSsrBuild }) => ({
       "react-csv",
       "json-2-csv",
       "papaparse",
+      "@marsidev/react-turnstile",
       "react-dropzone",
       "react-icons",
       "react-phone-number-input",
